@@ -2,13 +2,14 @@
 namespace Phaml;
 use Phaml;
 
-class Tag {
+class Tag extends Node {
     public $name;
     public $attributes;
-    public $children;
     public $is_void = false;
 
-    public function __construct($name, $attributes = array(), $children = array()) {
+    public function __construct($name = null, $attributes = array(), $children = array()) {
+        if ( !$name ) { $name = Phaml::DEFAULT_ELEMENT; }
+        
         $this->name = $name;
         $this->attributes = $attributes;
         $this->children = $children;
@@ -37,6 +38,12 @@ class Tag {
         }
     }
 
+    public function addAttributes(array $arr) {
+        foreach($arr as $key => $val) {
+            $this->addAttribute($key, $val);
+        }
+    }
+
     public function getAttribute($attr) {
         if ( isset($this->attributes[$attr]) ) {
             return $this->attributes[$attr];
@@ -47,10 +54,6 @@ class Tag {
 
     public function hasAttribute($attr) {
         return isset($this->attributes[$attr]);
-    }
-
-    public function hasChildren() {
-        return !empty($this->children);
     }
 
     public function toString() {
