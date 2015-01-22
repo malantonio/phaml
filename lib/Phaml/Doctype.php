@@ -40,7 +40,8 @@ class Doctype extends Text {
 
     public function __construct($which = "default", $config = "html5" ) {
         if ( $which === "" ) { $which = "default"; }
-        $this->setContent($this->prolog_shorthand[$config][$which]);
+
+        $this->setContent($this->prolog_shorthand[$config][(string) $which]);
     }
 
     private function noop() { return; }

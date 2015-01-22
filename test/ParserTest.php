@@ -185,13 +185,18 @@ class ParserTest extends PHPUnit_Framework_TestCase {
         );
     }
 
-
     public function testParseAttribute() {
         $pa = self::getMethod("parseAttribute");
-        $p = new Phaml\Parser();
         $this->assertEquals(
             array("this" => "that", "left" => "right"),
             $pa->invokeArgs($this->p, array($this->full_str))
         );
+    }
+
+    public function testParseDoctype() {
+        $pd = self::getMethod("parseDoctype");
+        $this->assertTrue($pd->invokeArgs($this->p, array("!!! XML")) instanceof Phaml\Doctype);
+        $this->assertTrue($pd->invokeArgs($this->p, array("!!!")) instanceof Phaml\Doctype);
+        $this->assertTrue($pd->invokeArgs($this->p, array("!! whatever")) instanceof Phaml\Text);
     }
 }

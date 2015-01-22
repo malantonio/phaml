@@ -11,12 +11,15 @@ class Parser {
     const TOKEN_ID = "#";
     const TOKEN_CLASS = ".";
 
+    const TOKEN_DOCTYPE = "!!!";
+
     const TOKEN_NEWLINE = "\n";
     const TOKEN_INDENT_SPACE = "^[ |\s]+";
 
     const TAG_REGEX = self::TOKEN_TAG . "([a-z]+)";
     const SELECTOR_REGEX = "([#\.][^#\.\(\)\s]+)+";
     const ATTRIBUTE_REGEX = "\(([^\)]*)\)";
+    const DOCTYPE_REGEX = "^".self::TOKEN_DOCTYPE."\s?([a-zA-Z\d\.]+)?";
 
     const REGEX_DELIMITER = "/";
 
@@ -277,6 +280,25 @@ class Parser {
         }
 
         return $out;
+    }
+
+    /**
+     *  parses the doctype selector and returns a Doctype object
+     *
+     *  @param  string
+     *  @return Phaml\Doctype if matches, else returns a Phaml\Text object
+     */
+
+    protected function parseDoctype($str) {
+        $reg = $this->toRegex(self::DOCTYPE_REGEX);
+        preg_match($reg, $str, $m);
+
+        if ( !empty($m) ) {
+            $mode = isset($m[1]) ? $m[1] : "default";
+            return new Doctype($mode);
+        } else {
+            return new Text($str);
+        }
     }
 
     /**

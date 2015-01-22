@@ -8,6 +8,7 @@
 - [ ] doctype + other special tags
 - [ ] meet [haml spec][haml_spec]
 - [ ] execute inline PHP with `-` and `=` tags
+- [ ] allow variables
 
 
 [haml_home]: http://haml.info
