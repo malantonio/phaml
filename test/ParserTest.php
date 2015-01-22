@@ -177,6 +177,15 @@ class ParserTest extends PHPUnit_Framework_TestCase {
         );
     }
 
+    public function testMultipleIDsReturnLast() {
+        $ps = self::getMethod("parseSelector");
+        $this->assertEquals(
+            array("id" => "id2"),
+            $ps->invokeArgs($this->p, array("%p#id1#id2"))
+        );
+    }
+
+
     public function testParseAttribute() {
         $pa = self::getMethod("parseAttribute");
         $p = new Phaml\Parser();

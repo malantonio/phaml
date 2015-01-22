@@ -298,8 +298,11 @@ class Parser {
         if ( isset($m[0]) ) {
             $split = explode(".", $m[0]);
             foreach($split as $attr) {
+
+                // if we get multiple ids, we only want the last
                 if ( preg_match($this->toRegex("^" . self::TOKEN_ID), $attr) ) {
-                    $out["id"] = str_replace("#", "", $attr);
+                    $ex = explode("#", $attr);
+                    $out["id"] = end($ex);
                 } else {
                     if ( !isset($out['class']) ) {
                         $out['class'] = $attr;
