@@ -32,51 +32,64 @@ class Parser {
 
         // split on newlines
         $body = preg_split("/\n/", $str);
-        $length = count($body);
+        
+        /**
+         *  offset we're expecting intervals of
+         */
+
         $global_offset = 0;
-        $dom = array();
+
+        /**
+         *  in order to keep track of all of the elements,
+         *  we'll store their positions w/in an array. a tree
+         *  that appears like this:
+         *
+         *      %ul
+         *        %li
+         *          %ul
+         *            %li
+         *        %li
+         *
+         *  will map out this array:
+         *
+         *      [
+         *        [%ul], 
+         *        [%li, %li], 
+         *        [%ul], 
+         *        [%li]
+         *      ]
+         *
+         *  so that we can more easily find siblings when our position
+         *  returns to the sibling level
+         */
+
+        $tree = array();
+        
+        /**
+         *  our trail(s) of breadcrumbs
+         */
+
         $current_node = null;
         $previous_node = null;
         $level = 0;
         $previous_level = 0;
+        $line_number = 0;
 
         $indentReg = $this->toRegex(self::TOKEN_INDENT_SPACE);
 
-        for ( $i = 0, $line_number = 1; $i < $length; $i++, $line_number++ ) {
-            $line = $body[$i];
-            $previous_inherits = false;
+        while ( $body ) {
+            $line = array_shift($body);
+            $line_number++;
             $previous_is_sibling = false;
 
             if ( $line == "" ) { continue; }
 
-            /**
-             *  first, let's see if our line is prefaced with some spaces
-             *  which will determine if the element is a parent or child
-             */
-
-            $offset = $this->getOffsetLength($line);
-
-            if ( $offset === 0 ) { 
-                $level = 0;
-            } else {
-                if ( $global_offset === 0 ) { $global_offset = $offset; }
-                $level = $offset / $global_offset;
-            }
-
-            if ( $level > $previous_level ) {
-                $previous_inherits = true;
-            } elseif ( $level == $previous_level ) {
-                $previous_is_sibling = true;
-            }
-
             // check for tags
             if ( $this->lineContainsTag($line) ) {
                 $current_node = $this->makeTagNode($line);
-            } 
+            }
 
-            // then actions (TODO)
-            //if ( $this->lineContainsAction($line) ) {}
-
+            // check for text
             $lineText = $this->lineRemoveTag($line);
             if ( $lineText != "" ) {
                 if ( !$current_node ) {
@@ -86,20 +99,57 @@ class Parser {
                 }
             }
 
-            if ( $previous_inherits ) {
-                $previous_node->addChild($current_node);
-            } elseif ( $previous_is_sibling && $level !== 0 ) {
-                $previous_node->getParent()->addChild($current_node);
+            /**
+             *  let's see if our line is prefaced with some spaces
+             *  which will determine if the element is a parent, sibling, or child
+             */
+
+            $offset = $this->getOffsetLength($line);
+            if ( $offset === 0 ) { 
+                $level = 0; 
             } else {
-                array_push($dom, $current_node);
+                if ( $global_offset === 0 ) { $global_offset = $offset; }
+                if ( $offBy = $offset % $global_offset ) { 
+                    $message = "[Line {$line_number}] "
+                             . "Expecting indent size of {$global_offset} "
+                             . "and got " . ($offBy + $global_offset);
+                    throw new InvalidOffsetException($message);
+                }
+                
+                $level = $offset / $global_offset;
             }
+
+            if ( !isset($tree[$level]) ) { $tree[$level] = array(); }
+
+            // child of previous element
+            if ( $level > $previous_level ) {
+                $previous_node->addChild($current_node);
+                array_push($tree[$level], $current_node);
+            } 
+
+            // sibling
+            elseif ( $level <= $previous_level && $level !== 0 ) {
+                // get the last element of the sibling level array
+                $previous_node = end($tree[$level]);
+
+                // get THAT element's parent + add this element
+                $previous_node->getParent()->addChild($current_node);
+            }
+
+            // tree-sibling
+            else {
+                array_push($tree[$level], $current_node);
+            }
+
+            // then actions (TODO)
+            //if ( $this->lineContainsAction($line) ) {}
 
             $previous_node = $current_node;
             $current_node = null;
             $previous_level = $level;
         }
 
-        return $dom;
+        return $tree[0];
     }
 
     /**

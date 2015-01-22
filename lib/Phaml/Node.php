@@ -1,12 +1,18 @@
 <?php
 namespace Phaml;
-class Node {
+abstract class Node {
     public $children = array();
     public $parent;
 
     public function addChild(Node $child) {
         array_push($this->children, $child);
         $child->addParent($this);
+    }
+
+    public function addChildren(array $children) {
+        foreach($children as $child) {
+            $this->addChild($child);
+        }
     }
 
     public function addParent(Node $parent) {

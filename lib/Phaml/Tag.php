@@ -11,7 +11,17 @@ class Tag extends Node {
         if ( !$name ) { $name = Phaml::DEFAULT_ELEMENT; }
         
         $this->name = $name;
-        $this->attributes = $attributes;
+
+        if ( !empty($attributes) ) {
+            $this->addAttributes($attributes);
+        }
+
+        if ( !empty($children) ) {
+            foreach($children as $c) {
+                $this->addChild($c);
+            }
+        }
+
         $this->children = $children;
 
         if ( in_array($this->name, Phaml::$void_elements) ) {
@@ -78,6 +88,7 @@ class Tag extends Node {
      */
 
     private function attributesToString() {
+        if ( !$this->attributes ) { return ""; }
         $out = "";
         foreach ( $this->attributes as $key => $value ) {
             $out .= " {$key}=\"{$value}\"";

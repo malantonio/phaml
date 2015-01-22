@@ -10,11 +10,11 @@ class ParserTest extends PHPUnit_Framework_TestCase {
 
 
     public function testParserSimple() {
-        $expect = array();
-        $expect[0] = new Phaml\Tag("p", array("id" => "abc", "class" => "one two three", "this" => "that", "left" => "right"));
-        $expect[0]->addChild(new Phaml\Text("text content"));
+        $expect = new Phaml\Tag("p", array("id" => "abc", "class" => "one two three", "this" => "that", "left" => "right"));
+        $expect->addChild(new Phaml\Text("text content"));
+        $parsed = $this->p->parse($this->full_str);
 
-        $this->assertEquals($expect, $this->p->parse($this->full_str));
+        $this->assertEquals(array($expect), $this->p->parse($this->full_str));
     }
 
     public function testParserMultipleLines() {
@@ -23,10 +23,12 @@ class ParserTest extends PHPUnit_Framework_TestCase {
   %strong some bold text";
         // first dom el
         $p = new Phaml\Tag("p", array("id" => "id"));
-        $c = new Phaml\Tag("strong");
-        $c->addChild(new Phaml\Text("some bold text"));
-        $p->addChild($c);
-       
+        $s = new Phaml\Tag("strong", array(), array(
+            new Phaml\Text("some bold text")
+        ));
+    
+        $p->addChild($s);
+        
         $expect = array($p);
         $parsed = $this->p->parse($txt);
         $this->assertEquals($expect, $parsed);
@@ -52,6 +54,45 @@ class ParserTest extends PHPUnit_Framework_TestCase {
         $expect = array($div);
         $parsed = $this->p->parse($txt);
         $this->assertEquals($expect, $parsed);
+    }
+
+    public function testStaggeredChildren() {
+        $txt = "
+%ul
+  %li
+    %ul
+      %li
+  %li";
+
+        $ul = new Phaml\Tag("ul", array(), array(
+                new Phaml\Tag("li", array(), array(
+                    new Phaml\Tag("ul", array(), array(
+                        new Phaml\Tag("li")
+                    ))
+                )),
+                new Phaml\Tag("li")
+        ));
+
+        $parsed = $this->p->parse($txt);
+        $this->assertEquals(array($ul), $parsed);
+
+    }
+
+    /**
+     * @expectedException Phaml\InvalidOffsetException
+     * @expectedExceptionMessage [Line 4] Expecting indent size of 4 and got 7
+     */
+
+    public function testInvalidOffsetException() {
+        $txt = "
+%p
+    %strong
+           %broke";
+
+
+
+        $this->p->parse($txt);
+        $this->fail();
     }
 
     /**
