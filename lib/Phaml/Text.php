@@ -17,7 +17,7 @@ class Text extends Node {
     }
 
     public function toString() {
-        return $content;
+        return $this->content;
     }
 
     public function __toString() {

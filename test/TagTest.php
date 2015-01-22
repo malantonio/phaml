@@ -27,4 +27,13 @@ class TagTest extends PHPUnit_Framework_TestCase {
     
         $this->assertEquals('<p class="test" id="test_one"></p>', $tag->toString());
     }
+
+    public function testTagWithChildrenToString() {
+        $tag = new Phaml\Tag("p", array(), array(
+            new Phaml\Tag("strong", array(), array(new Phaml\Text("TEST!"))),
+            new Phaml\Tag("em", array(), array(new Phaml\Text("TEXT!")))
+        ));
+
+        $this->assertEquals("<p><strong>TEST!</strong><em>TEXT!</em></p>", $tag->toString());
+    }
 }

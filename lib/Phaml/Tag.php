@@ -75,7 +75,11 @@ class Tag extends Node {
 
         $str .= ">";
 
-        if ( $this->hasChildren() ) {}
+        if ( $this->hasChildren() ) {
+            foreach($this->children as $child) {
+                $str .= $child->toString();
+            }
+        }
 
         $str .= "</" . $this->name . ">";
 
@@ -90,10 +94,11 @@ class Tag extends Node {
     private function attributesToString() {
         if ( !$this->attributes ) { return ""; }
         $out = "";
+        ksort($this->attributes);
+
         foreach ( $this->attributes as $key => $value ) {
             $out .= " {$key}=\"{$value}\"";
         }
-
         return $out;
     }
 
